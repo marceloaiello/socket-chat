@@ -22,8 +22,7 @@ io.on('connection', (client) => {
         usuarios.agregarPersona(client.id, data.nombre, data.sala);
 
         client.broadcast.to(data.sala).emit('listaPersonas', usuarios.getPersonasPorSala(data.sala));
-
-
+        client.broadcast.to(data.sala).emit('crearMensaje', crearMensaje('Adminstrador', `${ data.nombre} se unió al chat`));
         callback(usuarios.getPersonasPorSala(data.sala));
 
 
@@ -32,7 +31,7 @@ io.on('connection', (client) => {
 
     });
 
-    client.on('crearMensaje', (data) => {
+    client.on('crearMensaje', (data, callback) => {
         // para probar esto desde el navegador : en la consola
         // socket.emit('crearMensaje',{nombre:'jose',mensaje:'Hola a todos desde Marcelo'});
 
@@ -40,13 +39,14 @@ io.on('connection', (client) => {
         let mensaje = crearMensaje(persona.nombre, data.mensaje);
         client.broadcast.to(persona.sala).emit('crearMensaje', mensaje);
 
+        callback(mensaje);
     });
 
     client.on('disconnect', () => {
         let personaBorrada = usuarios.borrarPersona(client.id);
         //console.log('persona borrada por desooneccion', personaBorrada);
         client.broadcast.to(personaBorrada.sala).emit('crearMensaje', crearMensaje('Adminstrador', `${ personaBorrada.nombre} salió del chat`));
-
+        //console.log('lista personas', usuarios.getPersonasPorSala(personaBorrada.sala));
         client.broadcast.to(personaBorrada.sala).emit('listaPersonas', usuarios.getPersonasPorSala(personaBorrada.sala));
 
     });
